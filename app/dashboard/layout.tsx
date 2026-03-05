@@ -4,7 +4,7 @@ export default function Page({ children }: { children: React.ReactNode }) {
     return (
         <main>
             <Navbar />
-            <div className="flex flex-1 flex-col">{children}</div>
+            <div className="w-full h-full p-5">{children}</div>
         </main>
     )
 }

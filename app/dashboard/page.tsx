@@ -1,11 +1,31 @@
+import { Folder } from 'lucide-react'
+import Link from 'next/link'
+
+const folders = [
+    {
+        id: 1,
+        name: 'Blueprints',
+        path: 'blueprints',
+    },
+]
 export default function Page() {
     return (
-        <div className="flex flex-1 flex-col">
-            <div className="@container/main flex flex-1 flex-col gap-2">
-                <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-                    <h1>Dashboard</h1>
+        <div className="flex flex-col items-start gap-4">
+            {' '}
+            {folders.map((folder) => (
+                <div
+                    key={folder.id}
+                    className="flex flex-col items-start gap-2 hover:bg-gray-100 rounded-md p-2"
+                >
+                    <Link
+                        href={`/dashboard/${folder.path}`}
+                        className="flex flex-col items-center gap-2"
+                    >
+                        <Folder className="h-10 w-10" />
+                        <span className="text-sm">{folder.name}</span>
+                    </Link>
                 </div>
-            </div>
+            ))}{' '}
         </div>
     )
 }

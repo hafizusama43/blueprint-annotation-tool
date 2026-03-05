@@ -21,7 +21,7 @@ export function Navbar() {
                     </span>
                 </Link>
                 <div>
-                    <Button></Button>
+                    <Button variant="secondary">Reset</Button>
                 </div>
             </div>
         </header>
