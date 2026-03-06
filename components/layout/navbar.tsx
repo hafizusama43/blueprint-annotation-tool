@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { LayoutDashboard } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Button } from '../ui/button'
+import { ModeToggle } from './dark-mode'
 
 export function Navbar() {
     return (
@@ -21,7 +21,7 @@ export function Navbar() {
                     </span>
                 </Link>
                 <div>
-                    <Button variant="secondary">Reset</Button>
+                    <ModeToggle />
                 </div>
             </div>
         </header>

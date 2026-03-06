@@ -15,7 +15,7 @@ export default function Page() {
             {folders.map((folder) => (
                 <div
                     key={folder.id}
-                    className="flex flex-col items-start gap-2 hover:bg-gray-100 rounded-md p-2"
+                    className="flex flex-col items-start gap-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-md p-2"
                 >
                     <Link
                         href={`/dashboard/${folder.path}`}
