@@ -15,6 +15,7 @@ type FolderFileApiRecord = {
     fileSizeBytes?: number
     createdAt?: string
     updatedAt?: string
+    processingStatus?: 'PROCESSING' | 'READY' | 'FAILED'
 }
 
 type FolderFilesResponse =
@@ -32,6 +33,7 @@ export type FolderFile = {
     mimeType?: string
     fileSizeBytes?: number
     createdAt?: string
+    processingStatus?: 'PROCESSING' | 'READY' | 'FAILED'
 }
 
 function getFileName(file: FolderFileApiRecord) {
@@ -58,6 +60,7 @@ function normalizeFiles(response: FolderFilesResponse): FolderFile[] {
         mimeType: file.mimeType,
         fileSizeBytes: file.fileSizeBytes,
         createdAt: file.createdAt,
+        processingStatus: file.processingStatus,
     }))
 }
 
@@ -78,7 +81,37 @@ export const blueprintsApi = createApi({
                 { type: 'FolderFiles', id: folderName },
             ],
         }),
+        deleteFile: builder.mutation<void, string>({
+            query: (id) => ({
+                url: `blueprints/${id}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: (_result, _error, id) => [
+                { type: 'FolderFiles', id },
+            ],
+        }),
+        uploadFile: builder.mutation<
+            void,
+            {
+                key: string
+                originalFileName: string
+                fileUrl: string
+                name: string
+            }
+        >({
+            query: (data) => ({
+                url: `blueprints/upload`,
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: (_result, _error, data) => [
+                { type: 'FolderFiles', id: data.name },
+            ],
+        }),
     }),
 })
-
-export const { useGetFolderFilesQuery } = blueprintsApi
+export const {
+    useGetFolderFilesQuery,
+    useDeleteFileMutation,
+    useUploadFileMutation,
+} = blueprintsApi

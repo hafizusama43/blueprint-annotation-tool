@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { Button } from '@/components/ui/button'
 
 import {
@@ -14,20 +14,25 @@ import {
 
 import { UploadCloud, CheckCircle } from 'lucide-react'
 import { Separator } from './ui/separator'
-import axios from 'axios'
 import { Progress } from './ui/progress'
 import { uploadFileToR2 } from '@/lib/uploadFileToR2'
+import {
+    useGetFolderFilesQuery,
+    useUploadFileMutation,
+} from '@/store/features/blueprint/blueprintsApi'
 
 type UploadDialogProps = {
     children: React.ReactNode
 }
 
 export function UploadDialog({ children }: UploadDialogProps) {
+    const fileInputId = useId()
     const [file, setFile] = useState<File | null>(null)
     const [progress, setProgress] = useState(0)
     const [uploading, setUploading] = useState(false)
     const [success, setSuccess] = useState(false)
-
+    const [uploadFile] = useUploadFileMutation()
+    const { refetch: refetchFolderFiles } = useGetFolderFilesQuery('blueprints')
     const resetUpload = () => {
         setFile(null)
         setProgress(0)
@@ -48,26 +53,23 @@ export function UploadDialog({ children }: UploadDialogProps) {
 
     const handleUpload = async () => {
         if (!file) return
-    
+
         try {
             setUploading(true)
             setProgress(0)
-    
+
             const uploadResult = await uploadFileToR2({
                 file,
                 onProgress: (percent) => setProgress(percent),
             })
-    
-            await axios.post(
-                `${process.env.NEXT_PUBLIC_API_URL}/blueprints/upload`,
-                {
-                    key: uploadResult.key,
-                    originalFileName: file.name,
-                    fileUrl: uploadResult.fileUrl,
-                    name: file.name,
-                },
-            )
-    
+
+            await uploadFile({
+                key: uploadResult.key,
+                originalFileName: file.name,
+                fileUrl: uploadResult.fileUrl,
+                name: file.name,
+            })
+            await refetchFolderFiles()
             setSuccess(true)
         } catch (error) {
             console.error(error)
@@ -123,16 +125,21 @@ export function UploadDialog({ children }: UploadDialogProps) {
                                     or browse files
                                 </p>
 
-                                <label>
-                                    <input
-                                        type="file"
-                                        accept="application/pdf"
-                                        className="hidden"
-                                        onChange={handleFileChange}
-                                    />
+                                <input
+                                    id={fileInputId}
+                                    type="file"
+                                    accept="application/pdf,image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                                    className="hidden"
+                                    onChange={handleFileChange}
+                                />
 
-                                    <Button variant="secondary" size="sm">
-                                        Browse File
+                                <label htmlFor={fileInputId}>
+                                    <Button
+                                        asChild
+                                        variant="secondary"
+                                        size="sm"
+                                    >
+                                        <span>Browse File</span>
                                     </Button>
                                 </label>
 

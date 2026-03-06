@@ -9,10 +9,17 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
-import { useGetFolderFilesQuery } from '@/store/features/blueprint/blueprintsApi'
+import {
+    useDeleteFileMutation,
+    useGetFolderFilesQuery,
+} from '@/store/features/blueprint/blueprintsApi'
 import { EmptyDir } from './empty-dir'
-import { FilesSkeleton } from './files-skeleton'
+import { TableLoading } from './table-loading'
 import { formatFileSize, formatCreatedAt, getFileTypeLabel } from '@/lib/utils'
+import { Spinner } from '@/components/ui/spinner'
+import { Badge } from '@/components/ui/badge'
+import { Plus, Trash } from 'lucide-react'
+import { UploadDialog } from '@/components/upload-dialog'
 
 function getErrorMessage(error: unknown) {
     if (!error || typeof error !== 'object') {
@@ -47,10 +54,14 @@ export function FolderFilesClient({ folderName }: { folderName: string }) {
         isError,
         error,
         refetch,
-    } = useGetFolderFilesQuery(folderName)
-
+    } = useGetFolderFilesQuery(folderName, {
+        // pollingInterval: 3000,
+        // skipPollingIfUnfocused: true,
+    })
+    const [deleteFile] = useDeleteFileMutation()
+    const { refetch: refetchFolderFiles } = useGetFolderFilesQuery('blueprints')
     if (isLoading) {
-        return <FilesSkeleton />
+        return <TableLoading />
     }
 
     if (isError) {
@@ -66,6 +77,15 @@ export function FolderFilesClient({ folderName }: { folderName: string }) {
         )
     }
 
+    const handleDelete = async (id: string | number) => {
+        try {
+            await deleteFile(String(id)).unwrap()
+            await refetchFolderFiles()
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
     if (files.length === 0) {
         return <EmptyDir />
     }
@@ -73,17 +93,31 @@ export function FolderFilesClient({ folderName }: { folderName: string }) {
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-xl font-semibold capitalize">
-                        {folderName}
-                    </h1>
-                    <p className="text-sm text-muted-foreground">
-                        {files.length} file{files.length === 1 ? '' : 's'}
-                    </p>
+                <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                        <h1 className="text-2xl font-semibold tracking-tight capitalize">
+                            {folderName}
+                        </h1>
+                        <h1 className="text-2xl font-semibold tracking-tight capitalize">
+                            {folderName}
+                        </h1>
+                        <UploadDialog>
+                            <Button variant="outline" size="icon">
+                                <Plus className="size-5" />
+                            </Button>
+                        </UploadDialog>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Badge className="rounded-md px-2 py-0.5">
+                            {files.length}
+                            <span>file{files.length === 1 ? '' : 's'}</span>
+                        </Badge>
+                    </div>
                 </div>
                 {isFetching ? (
-                    <span className="text-sm text-muted-foreground">
-                        Refreshing...
+                    <span className="text-sm text-blue-500">
+                        <Spinner />
                     </span>
                 ) : null}
             </div>
@@ -94,6 +128,7 @@ export function FolderFilesClient({ folderName }: { folderName: string }) {
                         <TableHead>Name</TableHead>
                         <TableHead>Type</TableHead>
                         <TableHead>Size</TableHead>
+                        <TableHead>Status</TableHead>
                         <TableHead>Created at</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -110,7 +145,21 @@ export function FolderFilesClient({ folderName }: { folderName: string }) {
                                 {formatFileSize(file.fileSizeBytes)}
                             </TableCell>
                             <TableCell className="text-muted-foreground">
+                                {file.processingStatus}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
                                 {formatCreatedAt(file.createdAt)}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => {
+                                        void handleDelete(file.id)
+                                    }}
+                                >
+                                    <Trash className="size-5" />
+                                </Button>
                             </TableCell>
                         </TableRow>
                     ))}

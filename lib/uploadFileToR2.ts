@@ -1,14 +1,5 @@
 import axios from 'axios'
 
-type PresignedResponse = {
-    uploadUrl: string
-    method: 'PUT'
-    headers: Record<string, string>
-    key: string
-    fileUrl: string
-    expiresIn: number
-}
-
 export async function uploadFileToR2({
     file,
     onProgress,

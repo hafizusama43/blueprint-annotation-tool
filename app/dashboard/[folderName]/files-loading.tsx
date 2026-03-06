@@ -1,6 +1,6 @@
 import { Skeleton } from '@/components/ui/skeleton'
 
-export function FilesSkeleton() {
+export function FilesLoading() {
     return (
         <div className="grid grid-cols-10 grid-rows-5 gap-4">
             {Array.from({ length: 20 }).map((_, index) => (
