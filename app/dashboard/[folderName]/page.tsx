@@ -6,6 +6,5 @@ export default async function Page({
     params: Promise<{ folderName: string }>
 }) {
     const { folderName } = await params
-
     return <FolderFilesClient folderName={folderName} />
 }

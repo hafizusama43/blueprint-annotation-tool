@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { useGetFolderFilesQuery } from '@/store/features/blueprint/blueprintsApi'
 import { EmptyDir } from './empty-dir'
+import { FilesSkeleton } from './files-skeleton'
 
 function getErrorMessage(error: unknown) {
     if (!error || typeof error !== 'object') {
@@ -40,11 +41,7 @@ export function FolderFilesClient({ folderName }: { folderName: string }) {
     } = useGetFolderFilesQuery(folderName)
 
     if (isLoading) {
-        return (
-            <div className="text-sm text-muted-foreground">
-                Loading files...
-            </div>
-        )
+        return <FilesSkeleton />
     }
 
     if (isError) {
