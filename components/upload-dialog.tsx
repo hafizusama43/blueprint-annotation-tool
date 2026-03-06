@@ -16,6 +16,7 @@ import { UploadCloud, CheckCircle } from 'lucide-react'
 import { Separator } from './ui/separator'
 import axios from 'axios'
 import { Progress } from './ui/progress'
+import { uploadFileToR2 } from '@/lib/uploadFileToR2'
 
 type UploadDialogProps = {
     children: React.ReactNode
@@ -47,32 +48,30 @@ export function UploadDialog({ children }: UploadDialogProps) {
 
     const handleUpload = async () => {
         if (!file) return
-
-        const formData = new FormData()
-        formData.append('file', file)
-
+    
         try {
             setUploading(true)
-
-            await axios.post('/api/upload', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-
-                onUploadProgress: (progressEvent) => {
-                    const percent = Math.round(
-                        (progressEvent.loaded * 100) /
-                            (progressEvent.total ?? 1),
-                    )
-
-                    setProgress(percent)
-                },
+            setProgress(0)
+    
+            const uploadResult = await uploadFileToR2({
+                file,
+                onProgress: (percent) => setProgress(percent),
             })
-
+    
+            await axios.post(
+                `${process.env.NEXT_PUBLIC_API_URL}/blueprints/upload`,
+                {
+                    key: uploadResult.key,
+                    originalFileName: file.name,
+                    fileUrl: uploadResult.fileUrl,
+                    name: file.name,
+                },
+            )
+    
             setSuccess(true)
-            setUploading(false)
         } catch (error) {
             console.error(error)
+        } finally {
             setUploading(false)
         }
     }
@@ -86,7 +85,6 @@ export function UploadDialog({ children }: UploadDialogProps) {
                     <DialogTitle>Upload Blueprint</DialogTitle>
                 </DialogHeader>
 
-                {/* SUCCESS STATE */}
                 {success ? (
                     <div className="flex flex-col items-center gap-4 py-8 text-center">
                         <CheckCircle className="h-12 w-12 text-green-500" />
@@ -100,7 +98,6 @@ export function UploadDialog({ children }: UploadDialogProps) {
                     </div>
                 ) : (
                     <>
-                        {/* PROGRESS */}
                         {uploading && (
                             <div className="mt-4 space-y-2">
                                 <Progress value={progress} />
@@ -110,7 +107,6 @@ export function UploadDialog({ children }: UploadDialogProps) {
                             </div>
                         )}
 
-                        {/* DROP ZONE */}
                         {!uploading && (
                             <div
                                 onDragOver={(e) => e.preventDefault()}
@@ -161,7 +157,6 @@ export function UploadDialog({ children }: UploadDialogProps) {
                             </div>
                         )}
 
-                        {/* FOOTER */}
                         {!success && (
                             <DialogFooter>
                                 <Button
