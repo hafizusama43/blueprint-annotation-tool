@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useId, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 
 import {
@@ -20,6 +20,7 @@ import {
     useGetFolderFilesQuery,
     useUploadFileMutation,
 } from '@/store/features/blueprint/blueprintsApi'
+import { formatFileSize } from '@/lib/utils'
 
 type UploadDialogProps = {
     children: React.ReactNode
@@ -27,6 +28,8 @@ type UploadDialogProps = {
 
 export function UploadDialog({ children }: UploadDialogProps) {
     const fileInputId = useId()
+    const fileInputRef = useRef<HTMLInputElement>(null)
+    const [open, setOpen] = useState(false)
     const [file, setFile] = useState<File | null>(null)
     const [progress, setProgress] = useState(0)
     const [uploading, setUploading] = useState(false)
@@ -38,6 +41,18 @@ export function UploadDialog({ children }: UploadDialogProps) {
         setProgress(0)
         setUploading(false)
         setSuccess(false)
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = ''
+        }
+    }
+
+    const handleOpenChange = (nextOpen: boolean) => {
+        if (!nextOpen) {
+            resetUpload()
+        }
+
+        setOpen(nextOpen)
     }
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,7 +94,7 @@ export function UploadDialog({ children }: UploadDialogProps) {
     }
 
     return (
-        <Dialog>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>{children}</DialogTrigger>
 
             <DialogContent className="sm:max-w-md">
@@ -127,6 +142,7 @@ export function UploadDialog({ children }: UploadDialogProps) {
 
                                 <input
                                     id={fileInputId}
+                                    ref={fileInputRef}
                                     type="file"
                                     accept="application/pdf,image/png,image/jpeg,image/jpg,image/gif,image/webp"
                                     className="hidden"
@@ -153,10 +169,7 @@ export function UploadDialog({ children }: UploadDialogProps) {
                                             </p>
 
                                             <p className="text-xs text-muted-foreground">
-                                                {Math.round(
-                                                    file.size / 1024 / 1024,
-                                                )}{' '}
-                                                MB
+                                                {formatFileSize(file.size)}
                                             </p>
                                         </div>
                                     </>

@@ -31,3 +31,28 @@ export function getFileTypeLabel(mimeType: string | undefined): string {
     const parts = mimeType.split('/')
     return parts[parts.length - 1]?.toUpperCase() ?? mimeType
 }
+
+export function getErrorMessage(error: unknown) {
+    if (!error || typeof error !== 'object') {
+        return 'An unknown error occurred.'
+    }
+
+    if ('data' in error) {
+        const errorData = error.data
+
+        if (typeof errorData === 'string') {
+            return errorData
+        }
+
+        if (
+            errorData &&
+            typeof errorData === 'object' &&
+            'message' in errorData &&
+            typeof errorData.message === 'string'
+        ) {
+            return errorData.message
+        }
+    }
+
+    return 'An unknown error occurred.'
+}

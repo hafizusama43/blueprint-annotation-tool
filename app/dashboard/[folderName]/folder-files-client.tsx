@@ -12,39 +12,21 @@ import {
 import {
     useDeleteFileMutation,
     useGetFolderFilesQuery,
+    useProcessFileMutation,
 } from '@/store/features/blueprint/blueprintsApi'
 import { EmptyDir } from './empty-dir'
 import { TableLoading } from './table-loading'
-import { formatFileSize, formatCreatedAt, getFileTypeLabel } from '@/lib/utils'
+import {
+    formatFileSize,
+    formatCreatedAt,
+    getFileTypeLabel,
+    getErrorMessage,
+} from '@/lib/utils'
 import { Spinner } from '@/components/ui/spinner'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Trash } from 'lucide-react'
+import { LoaderPinwheelIcon, Plus, Trash } from 'lucide-react'
 import { UploadDialog } from '@/components/upload-dialog'
-
-function getErrorMessage(error: unknown) {
-    if (!error || typeof error !== 'object') {
-        return 'Failed to load files for this folder.'
-    }
-
-    if ('data' in error) {
-        const errorData = error.data
-
-        if (typeof errorData === 'string') {
-            return errorData
-        }
-
-        if (
-            errorData &&
-            typeof errorData === 'object' &&
-            'message' in errorData &&
-            typeof errorData.message === 'string'
-        ) {
-            return errorData.message
-        }
-    }
-
-    return 'Failed to load files for this folder.'
-}
+import { toast } from 'sonner'
 
 export function FolderFilesClient({ folderName }: { folderName: string }) {
     const {
@@ -60,6 +42,7 @@ export function FolderFilesClient({ folderName }: { folderName: string }) {
     })
     const [deleteFile] = useDeleteFileMutation()
     const { refetch: refetchFolderFiles } = useGetFolderFilesQuery('blueprints')
+    const [processFile] = useProcessFileMutation()
     if (isLoading) {
         return <TableLoading />
     }
@@ -81,8 +64,21 @@ export function FolderFilesClient({ folderName }: { folderName: string }) {
         try {
             await deleteFile(String(id)).unwrap()
             await refetchFolderFiles()
+            toast.success('File deleted successfully')
         } catch (error) {
             console.error(error)
+            toast.error(getErrorMessage(error))
+        }
+    }
+
+    const handleProcess = async (id: string | number) => {
+        try {
+            await processFile(String(id)).unwrap()
+            await refetchFolderFiles()
+            toast.success('File processing started successfully')
+        } catch (error) {
+            console.error(error)
+            toast.error(getErrorMessage(error))
         }
     }
 
@@ -150,16 +146,25 @@ export function FolderFilesClient({ folderName }: { folderName: string }) {
                             <TableCell className="text-muted-foreground">
                                 {formatCreatedAt(file.createdAt)}
                             </TableCell>
-                            <TableCell className="text-muted-foreground">
+                            <TableCell className="text-muted-foreground flex items-center gap-2">
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    onClick={() => {
-                                        void handleDelete(file.id)
-                                    }}
+                                    tooltipText="Delete file"
+                                    onClick={() => handleDelete(file.id)}
                                 >
                                     <Trash className="size-5" />
                                 </Button>
+                                {file.processingStatus === 'PENDING' && (
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        tooltipText="Process file"
+                                        onClick={() => handleProcess(file.id)}
+                                    >
+                                        <LoaderPinwheelIcon className="size-5" />
+                                    </Button>
+                                )}
                             </TableCell>
                         </TableRow>
                     ))}

@@ -33,7 +33,7 @@ export type FolderFile = {
     mimeType?: string
     fileSizeBytes?: number
     createdAt?: string
-    processingStatus?: 'PROCESSING' | 'READY' | 'FAILED'
+    processingStatus?: 'PROCESSING' | 'READY' | 'FAILED' | 'PENDING'
 }
 
 function getFileName(file: FolderFileApiRecord) {
@@ -108,10 +108,20 @@ export const blueprintsApi = createApi({
                 { type: 'FolderFiles', id: data.name },
             ],
         }),
+        processFile: builder.mutation<void, string>({
+            query: (id) => ({
+                url: `blueprints/${id}/process`,
+                method: 'PUT',
+            }),
+            invalidatesTags: (_result, _error, id) => [
+                { type: 'FolderFiles', id },
+            ],
+        }),
     }),
 })
 export const {
     useGetFolderFilesQuery,
     useDeleteFileMutation,
     useUploadFileMutation,
+    useProcessFileMutation,
 } = blueprintsApi
