@@ -8,6 +8,7 @@ import {
     EmptyTitle,
 } from '@/components/ui/empty'
 import { FolderCode } from 'lucide-react'
+import Link from 'next/link'
 
 export function EmptyDir() {
     return (
@@ -24,6 +25,9 @@ export function EmptyDir() {
             </EmptyHeader>
             <EmptyContent className="flex-row justify-center gap-2">
                 <Button variant="outline">Upload file</Button>
+                <Link href="/dashboard">
+                    <Button variant="outline">Back to dashboard</Button>
+                </Link>
             </EmptyContent>
         </Empty>
     )

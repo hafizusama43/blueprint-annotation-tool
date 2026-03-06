@@ -1,7 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit'
-import calibrationReducer from './slices/calibrationSlice'
-import canvasReducer from './slices/canvasSlice'
-import shapesReducer from './slices/shapesSlice'
+import calibrationReducer from './features/calibration/calibrationSlice'
+import canvasReducer from './features/canvas/canvasSlice'
+import shapesReducer from './features/shapes/shapesSlice'
+import blueprintReducer from './features/blueprint/blueprintSlice'
+import { blueprintsApi } from './features/blueprint/blueprintsApi'
 
 export const makeStore = () => {
     return configureStore({
@@ -9,7 +11,11 @@ export const makeStore = () => {
             calibration: calibrationReducer,
             canvas: canvasReducer,
             shapes: shapesReducer,
+            blueprint: blueprintReducer,
+            [blueprintsApi.reducerPath]: blueprintsApi.reducer,
         },
+        middleware: (getDefaultMiddleware) =>
+            getDefaultMiddleware().concat(blueprintsApi.middleware),
     })
 }
 
