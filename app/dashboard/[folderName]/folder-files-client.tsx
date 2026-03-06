@@ -1,9 +1,18 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table'
 import { useGetFolderFilesQuery } from '@/store/features/blueprint/blueprintsApi'
 import { EmptyDir } from './empty-dir'
 import { FilesSkeleton } from './files-skeleton'
+import { formatFileSize, formatCreatedAt, getFileTypeLabel } from '@/lib/utils'
 
 function getErrorMessage(error: unknown) {
     if (!error || typeof error !== 'object') {
@@ -79,16 +88,34 @@ export function FolderFilesClient({ folderName }: { folderName: string }) {
                 ) : null}
             </div>
 
-            <div className="space-y-2">
-                {files.map((file) => (
-                    <div
-                        key={String(file.id)}
-                        className="rounded-md border p-3 text-sm"
-                    >
-                        {file.name}
-                    </div>
-                ))}
-            </div>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Size</TableHead>
+                        <TableHead>Created at</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {files.map((file) => (
+                        <TableRow key={String(file.id)}>
+                            <TableCell className="font-medium">
+                                {file.name}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                                {getFileTypeLabel(file.mimeType)}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                                {formatFileSize(file.fileSizeBytes)}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                                {formatCreatedAt(file.createdAt)}
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
         </div>
     )
 }

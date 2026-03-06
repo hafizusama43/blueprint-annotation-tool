@@ -7,8 +7,14 @@ type FolderFileApiRecord = {
     fileName?: string
     filename?: string
     originalName?: string
+    originalFileName?: string
     title?: string
     url?: string
+    fileUrl?: string
+    mimeType?: string
+    fileSizeBytes?: number
+    createdAt?: string
+    updatedAt?: string
 }
 
 type FolderFilesResponse =
@@ -23,11 +29,15 @@ export type FolderFile = {
     id: string | number
     name: string
     url?: string
+    mimeType?: string
+    fileSizeBytes?: number
+    createdAt?: string
 }
 
 function getFileName(file: FolderFileApiRecord) {
     return (
         file.name ??
+        file.originalFileName ??
         file.fileName ??
         file.filename ??
         file.originalName ??
@@ -44,7 +54,10 @@ function normalizeFiles(response: FolderFilesResponse): FolderFile[] {
     return files.map((file, index) => ({
         id: file.id ?? file._id ?? `${getFileName(file)}-${index}`,
         name: getFileName(file),
-        url: file.url,
+        url: file.fileUrl ?? file.url,
+        mimeType: file.mimeType,
+        fileSizeBytes: file.fileSizeBytes,
+        createdAt: file.createdAt,
     }))
 }
 
