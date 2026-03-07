@@ -78,7 +78,7 @@ export default function ImageSlider({ pages }: Props) {
     }, [currentPage, pages.length, rowVirtualizer])
 
     return (
-        <div className="w-64 h-full border border-gray-400 p-5">
+        <div className="w-64 h-full p-2 bg-gray-100">
             <div ref={parentRef} className="h-full overflow-y-auto px-2">
                 <div
                     className="relative w-full"

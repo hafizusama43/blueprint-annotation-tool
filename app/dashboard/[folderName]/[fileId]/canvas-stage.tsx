@@ -33,7 +33,7 @@ export default function CanvasStage({ pages }: Props) {
     }, [currentPage, pages])
 
     return (
-        <div className="flex-1 h-full">
+        <div className="flex-1 h-full bg-gray-100 p-2">
             <Stage width={1200} height={800}>
                 <Layer>{img && <KonvaImage image={img} x={0} y={0} />}</Layer>
             </Stage>
