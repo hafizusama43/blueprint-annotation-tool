@@ -16,6 +16,7 @@ type FolderFileApiRecord = {
     createdAt?: string
     updatedAt?: string
     processingStatus?: 'PROCESSING' | 'READY' | 'FAILED'
+    pageCount?: number
 }
 
 type FolderFilesResponse =
@@ -26,6 +27,12 @@ type FolderFilesResponse =
           items?: FolderFileApiRecord[]
       }
 
+type UploadFileData = {
+    key: string
+    originalFileName: string
+    fileUrl: string
+    name: string
+}
 export type FolderFile = {
     id: string | number
     name: string
@@ -34,6 +41,7 @@ export type FolderFile = {
     fileSizeBytes?: number
     createdAt?: string
     processingStatus?: 'PROCESSING' | 'READY' | 'FAILED' | 'PENDING'
+    pageCount?: number
 }
 
 function getFileName(file: FolderFileApiRecord) {
@@ -61,6 +69,7 @@ function normalizeFiles(response: FolderFilesResponse): FolderFile[] {
         fileSizeBytes: file.fileSizeBytes,
         createdAt: file.createdAt,
         processingStatus: file.processingStatus,
+        pageCount: file.pageCount,
     }))
 }
 
@@ -90,22 +99,14 @@ export const blueprintsApi = createApi({
                 { type: 'FolderFiles', id },
             ],
         }),
-        uploadFile: builder.mutation<
-            void,
-            {
-                key: string
-                originalFileName: string
-                fileUrl: string
-                name: string
-            }
-        >({
+        uploadFile: builder.mutation<void, UploadFileData>({
             query: (data) => ({
                 url: `blueprints/upload`,
                 method: 'POST',
                 body: data,
             }),
             invalidatesTags: (_result, _error, data) => [
-                { type: 'FolderFiles', id: data.name },
+                { type: 'FolderFiles', id: data.key },
             ],
         }),
         processFile: builder.mutation<void, string>({

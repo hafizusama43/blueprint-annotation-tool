@@ -124,6 +124,7 @@ export function FolderFilesClient({ folderName }: { folderName: string }) {
                         <TableHead>Name</TableHead>
                         <TableHead>Type</TableHead>
                         <TableHead>Size</TableHead>
+                        <TableHead>Pages</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Created at</TableHead>
                     </TableRow>
@@ -139,6 +140,9 @@ export function FolderFilesClient({ folderName }: { folderName: string }) {
                             </TableCell>
                             <TableCell className="text-muted-foreground">
                                 {formatFileSize(file.fileSizeBytes)}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                                {file.pageCount}
                             </TableCell>
                             <TableCell className="text-muted-foreground">
                                 {file.processingStatus}
