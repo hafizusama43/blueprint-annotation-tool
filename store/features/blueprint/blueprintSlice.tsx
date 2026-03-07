@@ -1,16 +1,22 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
-const blueprintSlice = createSlice({
+interface BlueprintViewerState {
+    currentPageIndex: number
+}
+
+const initialState: BlueprintViewerState = {
+    currentPageIndex: 0,
+}
+
+const blueprintViewerSlice = createSlice({
     name: 'blueprint',
-    initialState: {
-        files: [],
-    },
+    initialState,
     reducers: {
-        setFiles(state, action) {
-            state.files = action.payload.files
+        setCurrentPage: (state, action: PayloadAction<number>) => {
+            state.currentPageIndex = action.payload
         },
     },
 })
 
-export const { setFiles } = blueprintSlice.actions
-export default blueprintSlice.reducer
+export const { setCurrentPage } = blueprintViewerSlice.actions
+export default blueprintViewerSlice.reducer

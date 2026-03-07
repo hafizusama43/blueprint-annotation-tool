@@ -27,6 +27,7 @@ import { Badge } from '@/components/ui/badge'
 import { LoaderPinwheelIcon, Plus, Trash } from 'lucide-react'
 import { UploadDialog } from '@/components/upload-dialog'
 import { toast } from 'sonner'
+import Link from 'next/link'
 
 export function FolderFilesClient({ folderName }: { folderName: string }) {
     const {
@@ -133,7 +134,11 @@ export function FolderFilesClient({ folderName }: { folderName: string }) {
                     {files.map((file) => (
                         <TableRow key={String(file.id)}>
                             <TableCell className="font-medium">
-                                {file.name}
+                                <Link
+                                    href={`/dashboard/${folderName}/${file.id}`}
+                                >
+                                    {file.name}
+                                </Link>
                             </TableCell>
                             <TableCell className="text-muted-foreground">
                                 {getFileTypeLabel(file.mimeType)}

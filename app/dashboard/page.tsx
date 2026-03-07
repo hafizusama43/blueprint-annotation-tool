@@ -10,7 +10,7 @@ const folders = [
 ]
 export default function Page() {
     return (
-        <div className="flex flex-col items-start gap-4">
+        <div className="flex flex-col items-start gap-4 p-5">
             {' '}
             {folders.map((folder) => (
                 <div

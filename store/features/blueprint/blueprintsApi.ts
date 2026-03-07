@@ -19,6 +19,15 @@ type FolderFileApiRecord = {
     pageCount?: number
 }
 
+export type BlueprintPage = {
+    id: string
+    pageNumber: number
+    imageUrl: string
+    thumbnailUrl: string
+    width: number
+    height: number
+}
+
 type FolderFilesResponse =
     | FolderFileApiRecord[]
     | {
@@ -42,6 +51,10 @@ export type FolderFile = {
     createdAt?: string
     processingStatus?: 'PROCESSING' | 'READY' | 'FAILED' | 'PENDING'
     pageCount?: number
+}
+
+export type FolderFileWithPages = FolderFile & {
+    pages?: BlueprintPage[]
 }
 
 function getFileName(file: FolderFileApiRecord) {
@@ -73,6 +86,29 @@ function normalizeFiles(response: FolderFilesResponse): FolderFile[] {
     }))
 }
 
+function normalizeFile(
+    file: FolderFileApiRecord & { pages?: BlueprintPage[] },
+): FolderFileWithPages {
+    return {
+        id: file.id ?? file._id ?? 'unknown',
+        name: getFileName(file),
+        url: file.fileUrl ?? file.url,
+        mimeType: file.mimeType,
+        fileSizeBytes: file.fileSizeBytes,
+        createdAt: file.createdAt,
+        processingStatus: file.processingStatus,
+        pageCount: file.pageCount,
+        pages: file.pages?.map((p) => ({
+            id: p.id,
+            pageNumber: p.pageNumber,
+            imageUrl: p.imageUrl,
+            thumbnailUrl: p.thumbnailUrl,
+            width: p.width,
+            height: p.height,
+        })),
+    }
+}
+
 export const blueprintsApi = createApi({
     reducerPath: 'blueprintsApi',
     baseQuery: fetchBaseQuery({
@@ -88,6 +124,17 @@ export const blueprintsApi = createApi({
                 normalizeFiles(response),
             providesTags: (_result, _error, folderName) => [
                 { type: 'FolderFiles', id: folderName },
+            ],
+        }),
+        getById: builder.query<FolderFileWithPages, string>({
+            query: (id) => ({
+                url: `blueprints/${id}`,
+            }),
+            transformResponse: (
+                response: FolderFileApiRecord & { pages?: BlueprintPage[] },
+            ) => normalizeFile(response),
+            providesTags: (_result, _error, id) => [
+                { type: 'FolderFiles', id },
             ],
         }),
         deleteFile: builder.mutation<void, string>({
@@ -125,4 +172,5 @@ export const {
     useDeleteFileMutation,
     useUploadFileMutation,
     useProcessFileMutation,
+    useGetByIdQuery,
 } = blueprintsApi
