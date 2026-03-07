@@ -1,12 +1,17 @@
 'use client'
 
-import { useEffect, useRef, memo } from 'react'
+import { useEffect, useRef, memo, useState, useMemo } from 'react'
 import Image from 'next/image'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useDispatch, useSelector } from 'react-redux'
-import { RootState } from '@/store/index'
+import {
+    RootState,
+    selectSelectedShapeId,
+    selectShapesByPageId,
+} from '@/store/index'
 import { setCurrentPage } from '@/store/features/blueprint/blueprintSlice'
 import { BlueprintPage } from '@/store/features/blueprint/blueprintsApi'
+import { useAppSelector } from '@/store/hooks'
 
 const THUMBNAIL_ROW_HEIGHT = 146
 
@@ -19,14 +24,27 @@ type SliderItemProps = {
     index: number
     isActive: boolean
     onSelect: (index: number) => void
+    pageId: string
 }
 
 const SliderItem = memo(function SliderItem({
     page,
     index,
     isActive,
+    pageId,
     onSelect,
 }: SliderItemProps) {
+    const shapes = useAppSelector((state) =>
+        selectShapesByPageId(state, pageId),
+    )
+
+    const totals = useMemo(() => {
+        return {
+            all: shapes.length,
+            linear: shapes.filter((shape) => shape.type === 'linear').length,
+            area: shapes.filter((shape) => shape.type === 'area').length,
+        }
+    }, [shapes])
     return (
         <div
             onClick={() => onSelect(index)}
@@ -41,6 +59,12 @@ const SliderItem = memo(function SliderItem({
                 <span className="absolute top-1 left-1 z-10 bg-black/70 text-white text-xs px-2 py-0.5 rounded">
                     {page.pageNumber}
                 </span>
+
+                {totals.all > 0 && (
+                    <div className="absolute bottom-1 right-1 z-10 bg-black/70 text-white text-xs px-2 py-0.5 rounded">
+                        Annotations: {totals.all}
+                    </div>
+                )}
 
                 <Image
                     src={page.thumbnailUrl}
@@ -78,7 +102,7 @@ export default function ImageSlider({ pages }: Props) {
     }, [currentPage, pages.length, rowVirtualizer])
 
     return (
-        <div className="w-64 h-full p-2 bg-gray-100">
+        <div className="min-w-64 h-full p-2 bg-gray-100">
             <div ref={parentRef} className="h-full overflow-y-auto px-2">
                 <div
                     className="relative w-full"
@@ -102,6 +126,7 @@ export default function ImageSlider({ pages }: Props) {
                                     onSelect={(index) =>
                                         dispatch(setCurrentPage(index))
                                     }
+                                    pageId={page.id}
                                 />
                             </div>
                         )
