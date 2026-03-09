@@ -42,6 +42,7 @@ import {
 } from '@/store/index'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import AnnotationsPanel from './annotations-panel'
+import { LucideLineDotRightHorizontal, Move, Scale, Square } from 'lucide-react'
 
 interface Props {
     pages: BlueprintPage[]
@@ -141,13 +142,18 @@ export default function CanvasStage({ pages }: Props) {
             stageSize.width / page.width,
             stageSize.height / page.height,
         )
+
+        console.log('fitScale', fitScale)
         const nextScale = Number.isFinite(fitScale) ? fitScale : 1
+        console.log('nextScale', nextScale)
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setScale(nextScale)
-        setPosition({
+        const nextPosition = {
             x: (stageSize.width - page.width * nextScale) / 2,
             y: (stageSize.height - page.height * nextScale) / 2,
-        })
+        }
+        setPosition(nextPosition)
+        console.log('nextPosition', nextPosition)
     }, [page, stageSize.height, stageSize.width])
 
     useEffect(() => {
@@ -381,17 +387,19 @@ export default function CanvasStage({ pages }: Props) {
                 <div className="flex flex-wrap items-center justify-between rounded-md bg-white border border-gray-200 px-3 py-2">
                     <div className="flex flex-wrap items-center gap-2">
                         <Button
-                            size="sm"
+                            tooltipText="Pan"
+                            size="icon"
                             variant={toolMode === 'pan' ? 'default' : 'outline'}
                             onClick={() => {
                                 setToolMode('pan')
                                 setDraftPoints([])
                             }}
                         >
-                            Pan
+                            <Move />
                         </Button>
                         <Button
-                            size="sm"
+                            tooltipText="Calibrate Scale"
+                            size="icon"
                             variant={
                                 toolMode === 'calibrate' ? 'default' : 'outline'
                             }
@@ -401,25 +409,27 @@ export default function CanvasStage({ pages }: Props) {
                                 setCalibrationDraft([])
                             }}
                         >
-                            Calibrate Scale
+                            <Scale />
                         </Button>
                         <Button
-                            size="sm"
+                            tooltipText="Linear"
+                            size="icon"
                             variant={
                                 toolMode === 'linear' ? 'default' : 'outline'
                             }
                             onClick={() => setToolMode('linear')}
                         >
-                            Linear
+                            <LucideLineDotRightHorizontal />
                         </Button>
                         <Button
-                            size="sm"
+                            tooltipText="Area"
+                            size="icon"
                             variant={
                                 toolMode === 'area' ? 'default' : 'outline'
                             }
                             onClick={() => setToolMode('area')}
                         >
-                            Area
+                            <Square />
                         </Button>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
