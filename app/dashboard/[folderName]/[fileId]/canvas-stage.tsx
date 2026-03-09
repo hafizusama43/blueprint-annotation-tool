@@ -42,7 +42,8 @@ import {
 } from '@/store/index'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import AnnotationsPanel from './annotations-panel'
-import { LucideLineDotRightHorizontal, Move, Scale, Square } from 'lucide-react'
+import { LucideLineDotRightHorizontal, Move, Scale, Square, TimerResetIcon } from 'lucide-react'
+import { setDefaultPosition, setDefaultZoom } from '@/store/features/blueprint/blueprintSlice'
 
 interface Props {
     pages: BlueprintPage[]
@@ -112,6 +113,8 @@ export default function CanvasStage({ pages }: Props) {
     const currentPage = useAppSelector(
         (state: RootState) => state.blueprint.currentPageIndex,
     )
+    const defaultZoom = useAppSelector((state: RootState) => state.blueprint.defaultZoom)
+    const defaultPosition = useAppSelector((state: RootState) => state.blueprint.defaultPosition)
     const page = pages[currentPage]
     const pageId = page?.id ?? ''
     const shapes = useAppSelector((state) =>
@@ -166,12 +169,14 @@ export default function CanvasStage({ pages }: Props) {
         const nextScale = Number.isFinite(fitScale) ? fitScale : 1
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setScale(nextScale)
+        dispatch(setDefaultZoom(nextScale))
         const nextPosition = {
             x: (stageSize.width - page.width * nextScale) / 2,
             y: (stageSize.height - page.height * nextScale) / 2,
         }
         setPosition(nextPosition)
-    }, [page, stageSize.height, stageSize.width])
+        dispatch(setDefaultPosition(nextPosition))
+    }, [page, stageSize.height, stageSize.width, dispatch])
 
     useEffect(() => {
         const element = containerRef.current
@@ -223,7 +228,7 @@ export default function CanvasStage({ pages }: Props) {
                     shapeType === 'linear'
                         ? measurementPx / calibratedPixelPerUnit
                         : measurementPx /
-                          (calibratedPixelPerUnit * calibratedPixelPerUnit)
+                        (calibratedPixelPerUnit * calibratedPixelPerUnit)
             }
             const baseUnit = hasCalibration
                 ? (calibration?.unitLabel ?? 'm')
@@ -274,7 +279,7 @@ export default function CanvasStage({ pages }: Props) {
     }, [draftPoints, finalizeShape, toolMode])
 
     useEffect(() => {
-        if (!isDev) return
+        // if (!isDev) return
 
         const sample = () => {
             const stage = stageRef.current
@@ -378,9 +383,9 @@ export default function CanvasStage({ pages }: Props) {
     const cursorWorld =
         cursor && calibration?.pixelPerUnit
             ? {
-                  x: cursor.x / calibration.pixelPerUnit,
-                  y: cursor.y / calibration.pixelPerUnit,
-              }
+                x: cursor.x / calibration.pixelPerUnit,
+                y: cursor.y / calibration.pixelPerUnit,
+            }
             : null
 
     const renderedShapes = useMemo(() => {
@@ -418,6 +423,12 @@ export default function CanvasStage({ pages }: Props) {
             )
         })
     }, [dispatch, selectedShapeId, shapes])
+
+
+    const resetZoomAndPosition = useCallback(() => {
+        setScale(defaultZoom)
+        setPosition(defaultPosition)
+    }, [defaultZoom, defaultPosition])
 
     if (!page) {
         return <div className="flex-1 h-full p-4">No pages found.</div>
@@ -473,6 +484,14 @@ export default function CanvasStage({ pages }: Props) {
                         >
                             <Square />
                         </Button>
+                        <Button
+                            tooltipText="Reset zoom and position"
+                            size="icon"
+                            variant="outline"
+                            onClick={resetZoomAndPosition}
+                        >
+                            <TimerResetIcon />
+                        </Button>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                         <Badge variant="outline">Page: {currentPage + 1}</Badge>
@@ -491,7 +510,7 @@ export default function CanvasStage({ pages }: Props) {
                                 ? `${cursorWorld.x.toFixed(2)}, ${cursorWorld.y.toFixed(2)} ${calibration?.unitLabel ?? ''}`
                                 : 'not calibrated'}
                         </Badge>
-                        {isDev && (
+                        {true && (
                             <>
                                 <Badge variant="outline">
                                     Heap:{' '}
@@ -705,6 +724,6 @@ export default function CanvasStage({ pages }: Props) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div>
+        </div >
     )
 }
