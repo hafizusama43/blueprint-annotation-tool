@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Blueprint Annotation Canvas (Frontend)
 
-## Getting Started
+This project implements the core frontend interaction loop for a quantity takeoff workflow:
+- open blueprint pages,
+- calibrate scale,
+- draw linear and area annotations,
+- and view measurement results in real time.
 
-First, run the development server:
+## Setup
+
+### Prerequisites
+- Node.js 18+ (recommended 20+)
+- npm 9+
+- Backend API running and reachable
+
+### Environment
+Create `.env.local` in the project root:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+NEXT_PUBLIC_API_URL=http://localhost:3001
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Update this URL to match your backend host/port.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Run (single command flow)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install && npm run dev
+```
 
-## Learn More
+Open [http://localhost:3000](http://localhost:3000).
 
-To learn more about Next.js, take a look at the following resources:
+## Architecture Overview
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Stack
+- Next.js App Router + TypeScript
+- react-konva for canvas rendering and interaction
+- Redux Toolkit + RTK Query for global state and API state
+- Tailwind CSS + shadcn/ui for UI
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Component structure
+- `app/dashboard/[folderName]/[fileId]/page.tsx`
+  - Route entry for file viewer.
+- `app/dashboard/[folderName]/[fileId]/file-client.tsx`
+  - Fetches file/pages and composes the main layout.
+- `app/dashboard/[folderName]/[fileId]/image-slider.tsx`
+  - Virtualized page thumbnails with current-page switching.
+- `app/dashboard/[folderName]/[fileId]/canvas-stage.tsx`
+  - Core annotation canvas:
+    - pan/zoom,
+    - scale calibration,
+    - linear and area drawing,
+    - on-canvas labels/measurements.
+- `app/dashboard/[folderName]/[fileId]/annotations-panel.tsx`
+  - Shape list, selection, rename, delete, and totals.
 
-## Deploy on Vercel
+### State management decisions
+State is centralized with Redux Toolkit because multiple UI regions (canvas, panel, slider, toolbar) need synchronized shared data.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `store/features/blueprint/blueprintSlice.tsx`
+  - Tracks `currentPageIndex`.
+- `store/features/shapes/shapesSlice.ts`
+  - Stores shapes by page, selected shape, label updates, delete actions.
+- `store/features/calibration/calibrationSlice.ts`
+  - Stores per-page calibration ratio, calibration line, and unit metadata.
+- `store/features/blueprint/blueprintsApi.ts`
+  - RTK Query endpoints for backend file/page loading.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+RTK Query is used to reduce custom request/caching boilerplate and keep async data flow consistent.
+
+## Known Limitations / Trade-offs
+
+- Annotation and calibration data are currently frontend-state based; backend persistence is a next step.
+- Shape editing is create/select/rename/delete only (no vertex drag/edit yet).
+- Unit handling is ratio-based with user-provided labels; advanced unit conversion/normalization is not yet added.
+- Performance optimization is practical but not exhaustive (future options: worker-based computation, viewport culling, tiled rendering for extremely large images).
+- Viewer consumes processed page images from backend; client-side PDF parsing/upload processing is not in this frontend scope.
+
+## What This Submission Demonstrates
+
+The delivered frontend covers the assignment’s core interaction goals:
+1) smooth navigation in blueprint pages,  
+2) accurate calibration workflow,  
+3) linear/area measurement tools,  
+4) annotation management with clear visual feedback.
