@@ -377,6 +377,10 @@ export default function CanvasStage({ pages }: Props) {
     )
 
     const calibrationLinePoints = calibration?.linePoints ?? null
+    const calibrationPreviewPoints =
+        toolMode === 'calibrate' && calibrationDraft.length === 1 && cursor
+            ? [calibrationDraft[0], cursor]
+            : null
     const calibrationLabelPoint = calibrationLinePoints
         ? getLabelPoint(calibrationLinePoints)
         : null
@@ -617,6 +621,24 @@ export default function CanvasStage({ pages }: Props) {
                                             fill="#c2410c"
                                         />
                                     )}
+                                </>
+                            )}
+                            {calibrationPreviewPoints && (
+                                <>
+                                    <Line
+                                        points={flattenPoints(
+                                            calibrationPreviewPoints,
+                                        )}
+                                        stroke="#fb923c"
+                                        strokeWidth={2}
+                                        dash={[6, 3]}
+                                    />
+                                    <Circle
+                                        x={calibrationPreviewPoints[0].x}
+                                        y={calibrationPreviewPoints[0].y}
+                                        radius={4}
+                                        fill="#fb923c"
+                                    />
                                 </>
                             )}
                         </Layer>
