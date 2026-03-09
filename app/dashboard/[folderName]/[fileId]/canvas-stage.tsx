@@ -50,6 +50,11 @@ interface Props {
 
 type ToolMode = 'pan' | 'calibrate' | 'linear' | 'area'
 
+type PerfMonitor = {
+    heapMb: number | null
+    nodeCount: number
+}
+
 function preloadImage(src?: string) {
     if (!src) return
 
@@ -129,11 +134,26 @@ export default function CanvasStage({ pages }: Props) {
     const [scale, setScale] = useState(1)
     const [position, setPosition] = useState({ x: 0, y: 0 })
     const [cursor, setCursor] = useState<CanvasPoint | null>(null)
+    const [perfMonitor, setPerfMonitor] = useState<PerfMonitor>({
+        heapMb: null,
+        nodeCount: 0,
+    })
+    const isDev = process.env.NODE_ENV !== 'production'
 
     useEffect(() => {
         preloadImage(pages[currentPage - 1]?.imageUrl)
         preloadImage(pages[currentPage + 1]?.imageUrl)
     }, [currentPage, pages])
+
+    useEffect(() => {
+        // Reset transient interaction state when switching pages.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setDraftPoints([])
+        setCalibrationDraft([])
+        setShowCalibrationDialog(false)
+        setCursor(null)
+        dispatch(setSelectedShape(null))
+    }, [dispatch, pageId])
 
     useEffect(() => {
         if (!page) return
@@ -143,9 +163,7 @@ export default function CanvasStage({ pages }: Props) {
             stageSize.height / page.height,
         )
 
-        console.log('fitScale', fitScale)
         const nextScale = Number.isFinite(fitScale) ? fitScale : 1
-        console.log('nextScale', nextScale)
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setScale(nextScale)
         const nextPosition = {
@@ -153,7 +171,6 @@ export default function CanvasStage({ pages }: Props) {
             y: (stageSize.height - page.height * nextScale) / 2,
         }
         setPosition(nextPosition)
-        console.log('nextPosition', nextPosition)
     }, [page, stageSize.height, stageSize.width])
 
     useEffect(() => {
@@ -255,6 +272,31 @@ export default function CanvasStage({ pages }: Props) {
         window.addEventListener('keydown', handleEnterToFinish)
         return () => window.removeEventListener('keydown', handleEnterToFinish)
     }, [draftPoints, finalizeShape, toolMode])
+
+    useEffect(() => {
+        if (!isDev) return
+
+        const sample = () => {
+            const stage = stageRef.current
+            const nodeCount = stage?.find('*').length ?? 0
+            const perf = performance as Performance & {
+                memory?: { usedJSHeapSize?: number }
+            }
+            const usedHeap = perf.memory?.usedJSHeapSize
+
+            setPerfMonitor({
+                heapMb:
+                    typeof usedHeap === 'number'
+                        ? usedHeap / (1024 * 1024)
+                        : null,
+                nodeCount,
+            })
+        }
+
+        sample()
+        const intervalId = window.setInterval(sample, 1000)
+        return () => window.clearInterval(intervalId)
+    }, [isDev, pageId])
 
     const onStageMouseDown = useCallback(() => {
         const stage = stageRef.current
@@ -449,6 +491,19 @@ export default function CanvasStage({ pages }: Props) {
                                 ? `${cursorWorld.x.toFixed(2)}, ${cursorWorld.y.toFixed(2)} ${calibration?.unitLabel ?? ''}`
                                 : 'not calibrated'}
                         </Badge>
+                        {isDev && (
+                            <>
+                                <Badge variant="outline">
+                                    Heap:{' '}
+                                    {perfMonitor.heapMb !== null
+                                        ? `${perfMonitor.heapMb.toFixed(1)} MB`
+                                        : 'n/a'}
+                                </Badge>
+                                <Badge variant="outline">
+                                    Nodes: {perfMonitor.nodeCount}
+                                </Badge>
+                            </>
+                        )}
                     </div>
                 </div>
                 <div
@@ -456,6 +511,7 @@ export default function CanvasStage({ pages }: Props) {
                     className="flex-1 min-w-0 rounded-md border border-gray-200 bg-white overflow-hidden"
                 >
                     <Stage
+                        key={pageId}
                         ref={stageRef}
                         width={stageSize.width}
                         height={stageSize.height}
